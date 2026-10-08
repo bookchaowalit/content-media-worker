@@ -1,0 +1,12 @@
+[
+  {
+    "url": "<short-lived or public media URL; this file stays local>",
+    "reference": "eval-samples/meeting-th-01.txt",
+    "language": "th"
+  },
+  {
+    "url": "<media URL>",
+    "reference": "eval-samples/clip-en-01.txt",
+    "language": "en"
+  }
+]

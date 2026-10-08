@@ -3,7 +3,7 @@ import { getJson, putJson } from '../state/kv.js';
 import { createSttAdapter, type WorkerEnv } from '../stt/index.js';
 import { errorSummary, isRetryable } from './http.js';
 import { toSrt } from './transcript.js';
-import type { FetchLike, KeyValueStore, MediaItem, MediaSource, OutputSink, SttAdapter, Summarizer, Transcript, WorkerLog } from './types.js';
+import type { FetchLike, KeyValueStore, MediaItem, MediaSource, OutputFile, OutputSink, SttAdapter, Summarizer, Transcript, WorkerLog } from './types.js';
 
 export const JOB_RECORD_CONTRACT = 'solo-empire.media-job.v1' as const;
 const ACTIVE_KEY = 'jobs:active';
@@ -66,12 +66,31 @@ function baseName(name: string): string {
   return dot > 0 ? name.slice(0, dot) : name;
 }
 
-function summaryHeader(job: JobRecord, transcript: Transcript): string {
+type OutputDecision = Pick<JobRecord['decision'], 'content_kind' | 'language' | 'needs_review'>;
+
+function summaryHeader(decision: OutputDecision, providerId: string | null, transcript: Transcript): string {
   const lines = [
-    `> ชนิด: ${job.decision.content_kind.value} (มั่นใจ ${job.decision.content_kind.confidence}) · ภาษา: ${transcript.language ?? job.decision.language.value} · ถอดเสียงโดย: ${job.provider_id}`,
+    `> ชนิด: ${decision.content_kind.value} (มั่นใจ ${decision.content_kind.confidence}) · ภาษา: ${transcript.language ?? decision.language.value} · ถอดเสียงโดย: ${providerId}`,
   ];
-  if (job.decision.needs_review) lines.push('> ⚠️ ระบบไม่มั่นใจชนิดไฟล์ ถ้าผิดให้เติมแท็ก [meeting] / [edit] / [clip] ในชื่อไฟล์แล้วอัปโหลดใหม่');
+  if (decision.needs_review) lines.push('> ⚠️ ระบบไม่มั่นใจชนิดไฟล์ ถ้าผิดให้เติมแท็ก [meeting] / [edit] / [clip] ในชื่อไฟล์แล้วอัปโหลดใหม่');
   return `${lines.join('\n')}\n\n`;
+}
+
+/** The three result files written next to a video; summary is optional. */
+export function buildOutputs(fileName: string, decision: OutputDecision, providerId: string | null, transcript: Transcript, summary: string | null): OutputFile[] {
+  const base = baseName(fileName);
+  const files: OutputFile[] = [
+    { name: `${base}.transcript.srt`, content: toSrt(transcript), content_type: 'application/x-subrip; charset=utf-8' },
+    {
+      name: `${base}.transcript.json`,
+      content: JSON.stringify({ contract: 'solo-empire.media-transcript.v1', decision, provider_id: providerId, transcript }, null, 2),
+      content_type: 'application/json; charset=utf-8',
+    },
+  ];
+  if (summary !== null) {
+    files.unshift({ name: `${base}.summary.md`, content: `# ${fileName}\n\n${summaryHeader(decision, providerId, transcript)}${summary}\n`, content_type: 'text/markdown; charset=utf-8' });
+  }
+  return files;
 }
 
 /**
@@ -242,16 +261,7 @@ export async function runTick(deps: PipelineDeps): Promise<TickResult> {
             summary = await deps.summarizer.summarize({ ...route, file_name: job.item.name, transcript });
             await deps.kv.put(summaryKey(id), summary);
           }
-          const base = baseName(job.item.name);
-          await deps.sink.write(job.item, [
-            { name: `${base}.summary.md`, content: `# ${job.item.name}\n\n${summaryHeader(job, transcript)}${summary}\n`, content_type: 'text/markdown; charset=utf-8' },
-            { name: `${base}.transcript.srt`, content: toSrt(transcript), content_type: 'application/x-subrip; charset=utf-8' },
-            {
-              name: `${base}.transcript.json`,
-              content: JSON.stringify({ contract: 'solo-empire.media-transcript.v1', decision: job.decision, transcript }, null, 2),
-              content_type: 'application/json; charset=utf-8',
-            },
-          ]);
+          await deps.sink.write(job.item, buildOutputs(job.item.name, job.decision, job.provider_id, transcript, summary));
           await deps.kv.delete(transcriptKey(id));
           await deps.kv.delete(summaryKey(id));
           await save({ status: 'done', error: null });

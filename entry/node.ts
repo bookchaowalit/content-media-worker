@@ -5,6 +5,8 @@
  *   node dist/node.mjs once     one tick, then exit (for external cron / Cloud Scheduler)
  *   node dist/node.mjs loop     tick every MEDIA_POLL_INTERVAL_SECONDS (default 300)
  *   node dist/node.mjs login    link OneDrive with a device code; stores the refresh token
+ *   node dist/node.mjs transcribe --url … --name …   one URL, no OneDrive needed (see entry/tools.ts)
+ *   node dist/node.mjs eval --manifest samples.json  score providers; --write updates own_eval
  *
  * MEDIA_STATE: upstash (any cloud) | file (needs a volume; MEDIA_STATE_PATH)
  * MEDIA_SINK:  onedrive (next to the video) | file (MEDIA_OUTPUT_DIR)
@@ -17,6 +19,7 @@ import { errorSummary } from '../core/http.js';
 import { runTick } from '../core/pipeline.js';
 import type { KeyValueStore, MediaItem, OutputFile, OutputSink, WorkerLog } from '../core/types.js';
 import { deviceCodeLogin, ONEDRIVE_REFRESH_KEY } from '../sources/onedrive.js';
+import { evalCommand, transcribeCommand } from './tools.js';
 
 /** JSON-file store for single-instance hosts with a persistent volume. */
 class FileKv implements KeyValueStore {
@@ -70,6 +73,8 @@ function stateStore(env: NodeJS.ProcessEnv): KeyValueStore {
 
 async function main(mode: string): Promise<number> {
   const env = process.env;
+  if (mode === 'transcribe') return transcribeCommand(process.argv.slice(3), env);
+  if (mode === 'eval') return evalCommand(process.argv.slice(3), env);
   const kv = stateStore(env);
 
   if (mode === 'login') {
@@ -112,7 +117,7 @@ async function main(mode: string): Promise<number> {
     }
     return 0;
   }
-  process.stderr.write('usage: node.mjs once|loop|login\n');
+  process.stderr.write('usage: node.mjs once|loop|login|transcribe|eval\n');
   return 2;
 }
 

@@ -3,3 +3,7 @@ dist/
 .media-worker/
 media-output/
 wrangler.toml
+.env*
+samples.json
+eval-samples/
+!.env.example
