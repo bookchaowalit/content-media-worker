@@ -1,0 +1,23 @@
+# Copy to wrangler.toml, create the KV namespace, then:
+#   npm run build:cloudflare && npx wrangler deploy
+# Secrets (never in this file):
+#   npx wrangler secret put ONEDRIVE_CLIENT_ID
+#   npx wrangler secret put AI_GATEWAY_TOKEN
+#   npx wrangler secret put SPEECHMATICS_API_KEY   # and any other provider keys
+#   npx wrangler secret put ONEDRIVE_REFRESH_TOKEN # bootstrap once; rotated tokens live in KV
+name = "solo-media-worker"
+main = "dist/cloudflare.mjs"
+compatibility_date = "2026-10-01"
+no_bundle = true
+
+[triggers]
+crons = ["*/10 * * * *"]
+
+[[kv_namespaces]]
+binding = "MEDIA_KV"
+id = "<kv-namespace-id>"
+
+[vars]
+AI_GATEWAY_URL = "https://<solo-ai-gateway-host>"
+ONEDRIVE_ROOT_PATH = "/Transcribe"
+MEDIA_SINK = "onedrive"
