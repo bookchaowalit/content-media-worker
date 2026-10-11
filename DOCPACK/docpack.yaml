@@ -1,0 +1,8 @@
+system_id: bookchaowalit/private/solo-media-worker
+prefix: CARD
+brand: "MEDIA WORKER"
+subtitle: "Worker ถอดเสียง: OneDrive/URL → speech-to-text → สรุปด้วย AI gateway"
+footer: "solo-media-worker — Product Card"
+color: "#ca6702"
+audience: internal
+tier: L0
