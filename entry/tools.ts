@@ -16,7 +16,7 @@ import {
   type ContentKind,
   type MediaLanguage,
   type MediaRoutingRegistry,
-} from '../../api/media_router.js';
+} from '../vendor/media_router.js';
 import { errorSummary } from '../core/http.js';
 import { errorRatePct, metricFor } from '../core/metrics.js';
 import { buildOutputs } from '../core/pipeline.js';
@@ -169,7 +169,7 @@ export async function evalCommand(argv: string[], env: WorkerEnv): Promise<numbe
     say('samples.json: [{ "url": "<media url>", "reference": "reference.txt", "language": "th" }]');
     return 2;
   }
-  const registryPath = resolve(text(args.registry) ?? env.MEDIA_ROUTING_REGISTRY_PATH ?? 'infra/platform/media-transcription-routing.json');
+  const registryPath = resolve(text(args.registry) ?? env.MEDIA_ROUTING_REGISTRY_PATH ?? 'vendor/media-transcription-routing.json');
   const registry = JSON.parse(await readFile(registryPath, 'utf8')) as MediaRoutingRegistry;
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as EvalSample[];
   const only = text(args.providers)?.split(',').map(id => id.trim()).filter(Boolean);

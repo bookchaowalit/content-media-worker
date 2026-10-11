@@ -1,5 +1,5 @@
 {
-  "name": "solo-empire-media-worker",
+  "name": "solo-media-worker",
   "version": "0.1.0",
   "private": true,
   "description": "Portable OneDrive to speech-to-text to AI summary worker (Node or Cloudflare Workers).",
@@ -10,9 +10,11 @@
   "scripts": {
     "build:node": "esbuild entry/node.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/node.mjs --legal-comments=none",
     "build:cloudflare": "esbuild entry/cloudflare.ts --bundle --platform=neutral --format=esm --target=es2022 --main-fields=module,main --outfile=dist/cloudflare.mjs --legal-comments=none",
-    "build": "npm run build:node && npm run build:cloudflare"
+    "build": "npm run build:node && npm run build:cloudflare",
+    "test": "node --import tsx --test test/media_worker_test.ts test/media_router_test.ts"
   },
   "devDependencies": {
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.1",
+    "tsx": "4.20.6"
   }
 }

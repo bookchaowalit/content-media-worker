@@ -1,4 +1,4 @@
-import type { ProviderEntry } from '../../api/media_router.js';
+import type { ProviderEntry } from '../vendor/media_router.js';
 import type { FetchLike, SttAdapter } from '../core/types.js';
 import { createAssemblyAiAdapter } from './assemblyai.js';
 import { createAzureSpeechAdapter } from './azure.js';

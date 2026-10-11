@@ -1,6 +1,6 @@
 /**
  * Summary prompts per profile. Profile names and gateway routes come from
- * infra/platform/media-transcription-routing.json; the prompt text lives here.
+ * vendor/media-transcription-routing.json; the prompt text lives here.
  * Output is Markdown for humans; the gateway enforces the Thai-first policy.
  */
 

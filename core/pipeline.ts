@@ -1,4 +1,4 @@
-import { decideMediaRoute, DEFAULT_MEDIA_ROUTING_REGISTRY, type MediaRouteDecision, type MediaRoutingRegistry } from '../../api/media_router.js';
+import { decideMediaRoute, DEFAULT_MEDIA_ROUTING_REGISTRY, type MediaRouteDecision, type MediaRoutingRegistry } from '../vendor/media_router.js';
 import { getJson, putJson } from '../state/kv.js';
 import { createSttAdapter, type WorkerEnv } from '../stt/index.js';
 import { errorSummary, isRetryable } from './http.js';
