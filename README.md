@@ -1,4 +1,4 @@
-# solo-media-worker
+# media-worker
 
 Worker พกพาได้สำหรับถอดเสียงสื่อ (OneDrive/URL → speech-to-text → สรุปด้วย AI gateway) รันบน Node (container/PaaS) หรือ Cloudflare Workers
 
