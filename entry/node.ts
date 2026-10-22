@@ -91,7 +91,11 @@ async function main(mode: string): Promise<number> {
   }
 
   const problems = configurationProblems(env);
-  if (problems.length) throw new Error(problems.join('; '));
+  if (problems.length) {
+    // Names only, never values; errorSummary would mask this joined list as "unexpected error".
+    log('media.config_invalid', { problems: problems.join('; ') });
+    return 1;
+  }
   const extraSinks = { file: new FileSink(env.MEDIA_OUTPUT_DIR || 'media-output') };
 
   if (mode === 'once') {
