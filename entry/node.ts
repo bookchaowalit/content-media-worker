@@ -14,9 +14,11 @@
 
 import { chmod, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import * as Sentry from '@sentry/node';
 import { buildPipelineDeps, configurationProblems, selectKv } from '../core/config.js';
 import { errorSummary } from '../core/http.js';
 import { runTick } from '../core/pipeline.js';
+import { sentryOptions } from '../core/sentry.js';
 import type { KeyValueStore, MediaItem, OutputFile, OutputSink, WorkerLog } from '../core/types.js';
 import { deviceCodeLogin, ONEDRIVE_REFRESH_KEY } from '../sources/onedrive.js';
 import { evalCommand, transcribeCommand } from './tools.js';
@@ -114,6 +116,7 @@ async function main(mode: string): Promise<number> {
         const deps = buildPipelineDeps({ env, fetch, kv, log, extraSinks });
         log('media.tick', { ...(await runTick(deps)) });
       } catch (error) {
+        Sentry.captureException(error);
         log('media.tick_failed', { reason: errorSummary(error) });
       }
       const until = Date.now() + intervalMs;
@@ -125,10 +128,22 @@ async function main(mode: string): Promise<number> {
   return 2;
 }
 
+// Errors reach Sentry only when SENTRY_DSN is set (errors only; see core/sentry.ts).
+Sentry.init(sentryOptions(process.env));
+
+const flushSentry = async () => {
+  if (Sentry.isEnabled()) await Sentry.flush(2_000);
+};
+
 main(process.argv[2] || 'once').then(
-  code => process.exit(code),
-  error => {
+  async code => {
+    await flushSentry();
+    process.exit(code);
+  },
+  async error => {
+    Sentry.captureException(error);
     log('media.startup_failed', { reason: errorSummary(error) });
+    await flushSentry();
     process.exit(1);
   },
 );
