@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["core/**/*.ts", "entry/**/*.ts", "sources/**/*.ts", "state/**/*.ts", "stt/**/*.ts", "summarize/**/*.ts", "vendor/**/*.ts", "test/**/*.ts"]
+}

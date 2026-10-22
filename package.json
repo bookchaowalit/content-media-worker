@@ -11,10 +11,13 @@
     "build:node": "esbuild entry/node.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/node.mjs --legal-comments=none",
     "build:cloudflare": "esbuild entry/cloudflare.ts --bundle --platform=neutral --format=esm --target=es2022 --main-fields=module,main --outfile=dist/cloudflare.mjs --legal-comments=none",
     "build": "npm run build:node && npm run build:cloudflare",
-    "test": "node --import tsx --test test/*.test.ts"
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "22.20.5",
     "esbuild": "0.28.1",
-    "tsx": "4.20.6"
+    "tsx": "4.20.6",
+    "typescript": "7.0.2"
   }
 }
