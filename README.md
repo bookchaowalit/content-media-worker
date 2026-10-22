@@ -21,3 +21,5 @@ docker build -t solo-media-worker .
 ```
 
 คีย์อยู่ใน `.env.local` (gitignored) ห้าม commit.
+
+Sentry (ตัวเลือก): ตั้ง `SENTRY_DSN` บนโฮสต์ที่รัน Node entry; ไม่ตั้ง = ปิด. ส่งเฉพาะ error ที่ผ่าน allowlist (`core/sentry.ts`). สถานะและข้อจำกัดดู `PRODUCT.md`.
