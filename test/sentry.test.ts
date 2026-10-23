@@ -41,14 +41,50 @@ test('events keep only allowlisted fields: no request, user, host, extra, breadc
   for (const key of ['server_name', 'request', 'user', 'breadcrumbs', 'extra']) assert.equal(event[key], undefined, key);
   assert.deepEqual(Object.keys(event.contexts ?? {}).sort(), ['os', 'runtime']);
   const value = event.exception!.values![0]!;
-  assert.equal(value.value, 'unexpected error');
+  assert.equal(value.value, '[redacted]');
   assert.deepEqual(value.stacktrace!.frames![0], { function: 'runTick', filename: 'node.mjs', lineno: 3 });
   assert.doesNotMatch(JSON.stringify(event), /SIGNED-DOWNLOAD-MARKER|GATEWAY-TOKEN|private words|my-laptop/);
 });
 
-test('short plain messages pass; anything with query strings or quotes is replaced', () => {
-  assert.equal(safeMessage('ai-gateway request failed with HTTP 502'), 'ai-gateway request failed with HTTP 502');
-  assert.equal(safeMessage(SIGNED_URL), 'unexpected error');
-  assert.equal(safeMessage(undefined), 'unexpected error');
-  assert.equal(safeMessage('x'.repeat(121)), 'unexpected error');
+test('only the app\'s own error messages pass; any other text is redacted', () => {
+  for (const allowed of [
+    'ai-gateway request failed with HTTP 502',
+    'azure-speech request timed out',
+    'GATEWAY_TOKEN is not set',
+    'MEDIA_STATE=r2 is not available on this runtime',
+    'MEDIA_SINK=notion is not available on this runtime',
+    'azure-speech returned no transcription id',
+    'deepgram did not finish within 30 minutes',
+    'unknown summary profile meeting',
+    'transcript is too long to summarize within the configured chunk size',
+    'OneDrive is not linked; run the login command first',
+    'OneDrive returned no download URL',
+    'device login failed: authorization_declined',
+    'device login expired',
+    'AZURE_SPEECH_REGION or AZURE_SPEECH_ENDPOINT is not set',
+    'no adapter for vendor whisper',
+  ]) assert.equal(safeMessage(allowed), allowed);
+  for (const leaked of [
+    SIGNED_URL,
+    'file Somchai salary review.mp4 not found',
+    'deepgram failed: speaker said the merger closes Friday',
+    'ENOENT: no such file or directory, open /home/me/Videos/private.mp4',
+    'x'.repeat(121),
+  ]) assert.equal(safeMessage(leaked), '[redacted]', leaked);
+  assert.equal(safeMessage(undefined), '[redacted]');
+});
+
+test('tags and linked cause values are not sent', () => {
+  const event: SentryLikeEvent = scrubEvent<SentryLikeEvent>({
+    tags: { file: 'salary review.mp4' },
+    exception: {
+      values: [
+        { type: 'Error', value: 'OneDrive returned no download URL', mechanism: { type: 'chained', source: 'cause', handled: true } },
+        { type: 'Error', value: 'OneDrive returned no download URL' },
+      ],
+    },
+  });
+  assert.equal(event.tags, undefined);
+  assert.equal(event.exception!.values![0]!.value, undefined);
+  assert.equal(event.exception!.values![1]!.value, 'OneDrive returned no download URL');
 });
