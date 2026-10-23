@@ -21,7 +21,7 @@ timestamped transcript and a Thai summary without keeping a laptop running. Ther
 | Job state | Upstash Redis, Cloudflare KV or a local JSON file; retries with a cap (`MEDIA_MAX_ATTEMPTS`), a per-tick job cap (`MEDIA_MAX_JOBS_PER_TICK`) and a tick lock |
 | Operator tools | `transcribe --url … --name …` (one URL, no OneDrive) and `eval --manifest …` (score providers against reference transcripts; CER for Thai, WER for English) |
 | Runtimes | Node (`dist/node.mjs`, `once` / `loop` / `login`; `Dockerfile` runs `loop`) and Cloudflare Workers (`dist/cloudflare.mjs`, cron trigger; HTTP answers a health check only) |
-| Error reporting | Sentry in the Node entry when `SENTRY_DSN` is set (errors only, events rebuilt from an allowlist; see `core/sentry.ts`). The Cloudflare entry has no Sentry |
+| Error reporting | Sentry in the Node entry when `SENTRY_DSN` is set (errors only, events rebuilt from an allowlist, only the app's own error messages, everything else `[redacted]`, no tags or cause values; see `core/sentry.ts`). The Cloudflare entry has no Sentry |
 | Checks | `npm run typecheck` (strict), `npm test` (4 files in `test/`), `npm run build`; shared CI on every push |
 
 ## How to run
