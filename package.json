@@ -22,5 +22,10 @@
   },
   "dependencies": {
     "@sentry/node": "11.8.0"
+  },
+  "overrides": {
+    "@sentry/bundler-plugins": {
+      "glob": "^14.0.3"
+    }
   }
 }
